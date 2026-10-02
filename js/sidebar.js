@@ -30,7 +30,7 @@ function initSidebar(user, activePage) {
     <nav class="sidebar" id="sidebar">
       <div class="sidebar-top">
         <a href="${homePageFor(user)}" class="sidebar-brand">
-          <div class="sidebar-logo"><img src="assets/images/logo.png" alt="Panpacific University" /></div>
+          <div class="sidebar-logo"><img src="../assets/images/logo.png" alt="Panpacific University" /></div>
           <div class="sidebar-brand-text">
             <div class="sidebar-brand-title">${brandTitle}</div>
             <div class="sidebar-brand-sub">Panpacific University</div>
@@ -59,7 +59,7 @@ function initSidebar(user, activePage) {
     </nav>
 
     <div class="sidebar-toggle-bar">
-      <div class="brand-mini"><img src="assets/images/logo.png" alt="" /> ${brandTitle}</div>
+      <div class="brand-mini"><img src="../assets/images/logo.png" alt="" /> ${brandTitle}</div>
       <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar"><i class="ti ti-layout-sidebar-left-collapse"></i></button>
     </div>`;
   document.body.classList.add("has-sidebar");
