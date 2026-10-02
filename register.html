@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Register - Panpacific University Scholarship System</title>
+<link rel="icon" type="image/png" href="assets/images/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<link rel="stylesheet" href="css/register.css" />
+</head>
+<body class="auth-body">
+
+<main class="auth-page">
+
+  <section class="auth-story">
+    <a class="auth-brand" href="index.html">
+      <img class="auth-logo" src="assets/images/logo.png" alt="Panpacific University" />
+    </a>
+    <div class="auth-story-body">
+      <span class="auth-tag">START YOUR JOURNEY</span>
+      <h1>Your scholarship<br>journey begins here.</h1>
+      <p>A dedicated space for your scholarship journey.<br>Student applications. Authorized Staff review.</p>
+    </div>
+    <small>Scholarship Portal &middot; Panpacific University</small>
+  </section>
+
+  <section class="auth-form">
+    <span class="eyebrow">Welcome to Panpacific University</span>
+    <h2>Create your student account.</h2>
+    <p class="auth-intro">Use your Panpacific University email address.</p>
+
+    <div class="auth-tabs">
+      <a href="index.html">Log in</a>
+      <a class="selected" href="register.html">Student registration</a>
+    </div>
+
+    <form id="registerForm" novalidate>
+      <div class="alert alert-error" id="registerAlert"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="regFullName">Full Name</label>
+          <div class="input-wrap"><i class="ti ti-user"></i><input type="text" id="regFullName" placeholder="e.g. Juan Dela Cruz" /></div>
+          <p class="field-error" id="regNameError"></p>
+        </div>
+        <div class="form-group">
+          <label for="regStudentId">Student ID</label>
+          <div class="input-wrap"><i class="ti ti-hash"></i><input type="text" id="regStudentId" placeholder="0000000" maxlength="7" inputmode="numeric" autocomplete="off" /></div>
+          <p class="form-hint">Exactly 7 digits, numbers only.</p>
+          <p class="field-error" id="regStudentIdError"></p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="regEmail">University Email</label>
+        <div class="input-wrap"><i class="ti ti-mail"></i><input type="email" id="regEmail" placeholder="you@panpacificu.edu.ph" /></div>
+        <p class="form-hint">Only @panpacificu.edu.ph email addresses are accepted.</p>
+        <p class="field-error" id="regEmailError"></p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="regProgram">Program/Course</label>
+          <div class="input-wrap"><i class="ti ti-books"></i><input type="text" id="regProgram" placeholder="e.g. BS Information Technology" /></div>
+          <p class="field-error" id="regProgramError"></p>
+        </div>
+        <div class="form-group">
+          <label for="regYearLevel">Year Level</label>
+          <div class="input-wrap">
+            <i class="ti ti-stairs-up"></i>
+            <select id="regYearLevel">
+              <option value="">Select Year Level</option>
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option>3rd Year</option>
+              <option>4th Year</option>
+              <option>Irregular</option>
+            </select>
+          </div>
+          <p class="field-error" id="regYearError"></p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <div class="input-wrap"><i class="ti ti-lock"></i><input type="password" id="regPassword" autocomplete="new-password" /></div>
+          <p class="field-error" id="regPasswordError"></p>
+        </div>
+        <div class="form-group">
+          <label for="regConfirmPassword">Confirm Password</label>
+          <div class="input-wrap"><i class="ti ti-lock"></i><input type="password" id="regConfirmPassword" autocomplete="new-password" /></div>
+          <p class="field-error" id="regConfirmError"></p>
+        </div>
+      </div>
+      <p class="form-hint form-hint-block" id="regPasswordHint"></p>
+
+      <button type="submit" class="btn btn-primary btn-block"><i class="ti ti-user-plus"></i> Create Account</button>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a href="index.html">Log in</a></p>
+  </section>
+
+</main>
+
+<script src="js/validation.js"></script>
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/register.js"></script>
+</body>
+</html>

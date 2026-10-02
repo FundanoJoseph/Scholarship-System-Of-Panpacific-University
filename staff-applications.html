@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Applications - Panpacific University Scholarship System</title>
+<link rel="icon" type="image/png" href="assets/images/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<link rel="stylesheet" href="css/sidebar.css" />
+<link rel="stylesheet" href="css/staff-applications.css" />
+</head>
+<body class="has-sidebar">
+
+<div id="sidebar-placeholder"></div>
+
+<main class="page-main">
+
+  <div class="page-top">
+    <div>
+      <div class="eyebrow">Panpacific University scholarship portal</div>
+      <h1>Applications</h1>
+      <p>Manually review submitted documents and record the result. The system does not grade students.</p>
+    </div>
+    <div class="term-pill"><i class="ti ti-calendar-event"></i> <span id="termText"></span></div>
+  </div>
+
+  <section class="card card-flush">
+    <div class="tab-bar-wrap">
+      <div class="tab-bar" id="statusTabs">
+        <button type="button" class="tab-btn active" data-status="All">All</button>
+        <button type="button" class="tab-btn" data-status="Submitted">Submitted</button>
+        <button type="button" class="tab-btn" data-status="Under Evaluation">Under Evaluation</button>
+        <button type="button" class="tab-btn" data-status="Approved">Approved</button>
+        <button type="button" class="tab-btn" data-status="Rejected">Rejected</button>
+        <button type="button" class="tab-btn" data-status="History">History</button>
+      </div>
+    </div>
+
+    <div class="table-toolbar">
+      <div class="input-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="searchBox" placeholder="Search by student name or student ID" aria-label="Search applications" />
+      </div>
+      <select class="plain-select" id="typeFilter" aria-label="Filter by scholarship type">
+        <option value="">All scholarship types</option>
+      </select>
+      <input type="date" class="plain-select" id="dateFilter" aria-label="Filter by date submitted" />
+      <button type="button" class="btn btn-outline btn-sm" id="clearFiltersBtn"><i class="ti ti-x"></i> Clear filters</button>
+    </div>
+
+    <div class="table-wrap" id="applicationsWrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Application ID</th>
+            <th>Student</th>
+            <th>Scholarship type</th>
+            <th>Date submitted</th>
+            <th class="approved-only" hidden>Program / year</th>
+            <th class="approved-only" hidden>Approved on</th>
+            <th class="approved-only" hidden>Approved by</th>
+            <th>Discount %</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="applicationRows"></tbody>
+      </table>
+    </div>
+    <div class="empty-state hidden" id="emptyState">
+      <i class="ti ti-clipboard-off icon"></i>
+      <p>No applications match your filters.</p>
+    </div>
+
+    <div class="table-wrap" id="historyWrap" hidden>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Application ID</th>
+            <th>Term</th>
+            <th>Student</th>
+            <th>Scholarship type</th>
+            <th>Previous status</th>
+            <th>New status</th>
+            <th>Date / time</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="historyRows"></tbody>
+      </table>
+    </div>
+    <div class="empty-state hidden" id="historyEmptyState">
+      <i class="ti ti-history-toggle icon"></i>
+      <p>No status changes recorded yet.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">&copy; Panpacific University &middot; Scholarship Portal</footer>
+
+
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal modal-lg">
+    <div class="modal-heading">
+      <h2>Application details</h2>
+      <button type="button" class="close" data-close-modal aria-label="Close dialog"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="reviewBody"></div>
+
+    <h3 class="modal-subhead">Evaluation</h3>
+    <div class="alert alert-error" id="evalAlert"></div>
+    <div id="evalArea"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal modal-sm">
+    <div class="modal-heading">
+      <h2 id="confirmTitle">Confirm</h2>
+      <button type="button" class="close" data-close-modal aria-label="Close dialog"><i class="ti ti-x"></i></button>
+    </div>
+    <p class="modal-text" id="confirmText"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+      <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal modal-sm">
+    <div class="modal-heading">
+      <h2>Delete application</h2>
+      <button type="button" class="close" data-close-modal aria-label="Close dialog"><i class="ti ti-x"></i></button>
+    </div>
+    <p class="modal-text" id="deleteText"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+      <button type="button" class="btn btn-danger" id="deleteConfirmBtn"><i class="ti ti-trash"></i> Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/validation.js"></script>
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/files.js"></script>
+<script src="js/application-view.js"></script>
+<script src="js/change-password.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/staff-applications.js"></script>
+</body>
+</html>

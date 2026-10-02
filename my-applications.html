@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Applications - Panpacific University Scholarship System</title>
+<link rel="icon" type="image/png" href="assets/images/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<link rel="stylesheet" href="css/sidebar.css" />
+<link rel="stylesheet" href="css/my-applications.css" />
+</head>
+<body class="has-sidebar">
+
+<div id="sidebar-placeholder"></div>
+
+<main class="page-main">
+
+  <div class="page-top">
+    <div>
+      <div class="eyebrow">Panpacific University scholarship portal</div>
+      <h1>My Applications</h1>
+      <p>Track your scholarship applications from submission to final decision.</p>
+    </div>
+    <a class="btn btn-primary" href="scholarships.html"><i class="ti ti-plus"></i> New application</a>
+  </div>
+
+  <section class="card card-flush">
+    <div class="table-toolbar">
+      <div class="input-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="searchBox" placeholder="Search application ID or scholarship..." aria-label="Search applications" />
+      </div>
+      <select class="plain-select" id="statusFilter" aria-label="Filter by status">
+        <option value="">All statuses</option>
+        <option>Submitted</option>
+        <option>Under Evaluation</option>
+        <option>Approved</option>
+        <option>Rejected</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Application</th>
+            <th>Scholarship</th>
+            <th>Term</th>
+            <th>Submitted</th>
+            <th>Discount %</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="applicationRows"></tbody>
+      </table>
+    </div>
+    <div class="empty-state hidden" id="emptyState">
+      <i class="ti ti-clipboard-off icon"></i>
+      <p>No applications to show.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">&copy; Panpacific University &middot; Scholarship Portal</footer>
+
+
+<div class="modal-overlay" id="detailModal">
+  <div class="modal modal-lg">
+    <div class="modal-heading">
+      <h2>Application details</h2>
+      <button type="button" class="close" data-close-modal aria-label="Close dialog"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="detailBody"></div>
+  </div>
+</div>
+
+<script src="js/validation.js"></script>
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/files.js"></script>
+<script src="js/application-view.js"></script>
+<script src="js/change-password.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/my-applications.js"></script>
+</body>
+</html>

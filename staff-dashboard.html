@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard - Panpacific University Scholarship System</title>
+<link rel="icon" type="image/png" href="assets/images/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<link rel="stylesheet" href="css/sidebar.css" />
+<link rel="stylesheet" href="css/staff-dashboard.css" />
+</head>
+<body class="has-sidebar">
+
+<div id="sidebar-placeholder"></div>
+
+<main class="page-main">
+
+  <div class="page-top">
+    <div>
+      <div class="eyebrow">Panpacific University scholarship portal</div>
+      <h1>Scholarship Monitoring Dashboard</h1>
+      <p>Applications received and their evaluation progress.</p>
+    </div>
+    <button type="button" class="term-pill term-pill-btn" id="termButton" title="Click to change the trimester or academic year">
+      <i class="ti ti-calendar-event"></i>
+      <span id="termText"></span>
+      <i class="ti ti-pencil term-pill-edit"></i>
+    </button>
+  </div>
+
+  <div class="stat-row">
+    <a class="card stat-card" href="staff-applications.html">
+      <div class="stat-label"><i class="ti ti-clipboard-list"></i> Total applications</div>
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-sub" id="statTotalNote"></div>
+    </a>
+    <a class="card stat-card heading" href="staff-applications.html?status=Under%20Evaluation">
+      <div class="stat-label"><i class="ti ti-hourglass"></i> Under evaluation</div>
+      <div class="stat-num" id="statEvaluating">0</div>
+      <div class="stat-sub">Being evaluated by staff</div>
+    </a>
+    <a class="card stat-card" href="staff-applications.html?status=Approved">
+      <div class="stat-label"><i class="ti ti-circle-check"></i> Approved</div>
+      <div class="stat-num" id="statApproved">0</div>
+      <div class="stat-sub" id="statApprovedNote"></div>
+    </a>
+    <a class="card stat-card danger" href="staff-applications.html?status=Rejected">
+      <div class="stat-label"><i class="ti ti-circle-x"></i> Rejected</div>
+      <div class="stat-num" id="statRejected">0</div>
+      <div class="stat-sub" id="statRejectedNote"></div>
+    </a>
+  </div>
+
+  <div class="chart-grid">
+
+    <section class="card chart-card">
+      <div class="chart-head">
+        <div>
+          <h3><i class="ti ti-chart-pie"></i> Application status</h3>
+          <p>Where every application stands right now</p>
+        </div>
+      </div>
+      <div class="doughnut-layout">
+        <div class="doughnut-box"><canvas id="statusChart"></canvas></div>
+        <ul class="legend" id="statusLegend"></ul>
+      </div>
+    </section>
+
+    <section class="card chart-card">
+      <div class="chart-head">
+        <div>
+          <h3><i class="ti ti-chart-bar"></i> Scholarship type distribution</h3>
+          <p>Most requested scholarships first</p>
+        </div>
+      </div>
+      <div class="chart-box chart-box-tall"><canvas id="typeChart"></canvas></div>
+    </section>
+
+    <section class="card chart-card chart-card-wide">
+      <div class="chart-head">
+        <div>
+          <h3><i class="ti ti-chart-line"></i> Application trend</h3>
+          <p>Applications submitted in the last 14 days</p>
+        </div>
+        <span class="chart-chip" id="trendChip"></span>
+      </div>
+      <div class="chart-box"><canvas id="trendChart"></canvas></div>
+    </section>
+
+  </div>
+
+</main>
+
+<footer class="footer">&copy; Panpacific University &middot; Scholarship Portal</footer>
+
+<div class="modal-overlay" id="termModal">
+  <div class="modal modal-sm">
+    <div class="modal-heading">
+      <h2>Change school term</h2>
+      <button type="button" class="close" data-close-modal aria-label="Close dialog"><i class="ti ti-x"></i></button>
+    </div>
+
+    <p class="modal-text">Pick the trimester and type the academic year. Everything is checked when you click Save.</p>
+
+    <form id="termForm" novalidate>
+      <div class="alert alert-error" id="termAlert"></div>
+
+      <div class="form-group">
+        <label>Trimester</label>
+        <div class="choice-row" id="trimesterChoices"></div>
+        <p class="field-error" id="termTrimesterError"></p>
+      </div>
+
+      <div class="form-group">
+        <label for="termYear">Academic year</label>
+        <div class="input-wrap"><i class="ti ti-calendar"></i><input type="text" id="termYear" placeholder="2026-2027" maxlength="9" autocomplete="off" /></div>
+        <p class="form-hint">Two years in a row, for example 2026-2027.</p>
+        <p class="field-error" id="termYearError"></p>
+      </div>
+
+      <div class="notice notice-spaced">
+        <i class="ti ti-info-circle"></i>
+        <span>Saving a new term <strong>resets the Dashboard, Applications and Awarded pages</strong> so the new term starts fresh. No application is deleted, every student's information, documents, status and history are kept, and each one is labelled with the term it was submitted in.</span>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Save term</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="termConfirmModal">
+  <div class="modal modal-sm">
+    <div class="modal-heading">
+      <h2>Confirm new term</h2>
+      <button type="button" class="close" data-close-modal aria-label="Close dialog"><i class="ti ti-x"></i></button>
+    </div>
+    <p class="modal-text" id="termConfirmText"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline" data-close-modal>Cancel</button>
+      <button type="button" class="btn btn-primary" id="termConfirmBtn">Yes, start the new term</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="js/validation.js"></script>
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/change-password.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/staff-dashboard.js"></script>
+</body>
+</html>

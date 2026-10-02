@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard - Panpacific University Scholarship System</title>
+<link rel="icon" type="image/png" href="assets/images/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
+<link rel="stylesheet" href="css/sidebar.css" />
+<link rel="stylesheet" href="css/student-dashboard.css" />
+</head>
+<body class="has-sidebar">
+
+<div id="sidebar-placeholder"></div>
+
+<main class="page-main">
+
+  <div class="page-top">
+    <div>
+      <div class="eyebrow">Your scholarship journey</div>
+      <h1>Welcome back, <span id="welcomeName">Student</span> <i class="ti ti-sun wave"></i></h1>
+      <p>Your next chapter starts here.</p>
+    </div>
+    <div class="term-pill"><i class="ti ti-calendar-event"></i> <span id="termText"></span></div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="hero-tag">APPLICATION &amp; STATUS TRACKING</span>
+      <h2>A little support. A world of possibilities.</h2>
+      <p>Explore opportunities, track your application, and take the next step toward your future.</p>
+      <a class="btn btn-light" href="scholarships.html">Explore scholarships <i class="ti ti-arrow-up-right"></i></a>
+    </div>
+  </section>
+
+  <div class="stat-row stat-row-3">
+    <a class="card stat-card" href="scholarships.html">
+      <div class="stat-label">Scholarship programs <i class="ti ti-award"></i></div>
+      <div class="stat-num" id="statPrograms">00</div>
+      <div class="stat-sub">Available for you to apply</div>
+    </a>
+    <a class="card stat-card accent" href="my-applications.html">
+      <div class="stat-label">My applications <i class="ti ti-clipboard-list"></i></div>
+      <div class="stat-num" id="statApplications">00</div>
+      <div class="stat-sub">Your submitted records</div>
+    </a>
+    <a class="card stat-card heading" href="my-applications.html">
+      <div class="stat-label">Application status <i class="ti ti-hourglass"></i></div>
+      <div class="stat-num small" id="statStatus">None yet</div>
+      <div class="stat-sub" id="statStatusNote">Apply to a scholarship to get started</div>
+    </a>
+  </div>
+
+  <div class="content-grid">
+    <div class="content-main">
+      <div class="section-heading">
+        <h2>My application</h2>
+        <a class="text-link" href="my-applications.html">View all <i class="ti ti-arrow-right"></i></a>
+      </div>
+      <div id="latestApplication"></div>
+
+      <div class="section-heading spaced">
+        <h2>Find your opportunity</h2>
+        <a class="text-link" href="scholarships.html">Browse all <i class="ti ti-arrow-right"></i></a>
+      </div>
+      <div class="program-grid" id="programGrid"></div>
+    </div>
+
+    <aside class="right-column">
+      <div class="section-heading"><h2>At a glance</h2></div>
+
+      <section class="deadline-card">
+        <i class="ti ti-calendar-time side-icon"></i>
+        <span class="micro">Don't miss out</span>
+        <h3>A new semester.<br>A new opportunity.</h3>
+        <p>Submit your requirements online and track staff review from submission to release of results.</p>
+        <div class="date-row">
+          <span>Application deadline</span>
+          <strong>To be announced by the CSS Office</strong>
+        </div>
+        <button type="button" class="text-link" id="openGuidelines">View application guidelines <i class="ti ti-arrow-up-right"></i></button>
+      </section>
+
+      <section class="checklist">
+        <h3>Your application checklist</h3>
+        <p>A few things to have ready.</p>
+        <ul id="checklist"></ul>
+        <div class="checklist-links">
+          <a class="text-link" href="scholarships.html">Start an application <i class="ti ti-arrow-right"></i></a>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+</main>
+
+<footer class="footer">&copy; Panpacific University &middot; Scholarship Portal</footer>
+
+<div class="modal-overlay" id="guidelinesModal">
+  <div class="modal">
+    <div class="modal-heading">
+      <h2>Application guidelines</h2>
+      <button type="button" class="close" data-close-modal aria-label="Close dialog"><i class="ti ti-x"></i></button>
+    </div>
+    <ol class="guidelines">
+      <li>Open <strong>Scholarships</strong> and choose the scholarship you want.</li>
+      <li>Read the details, then press <strong>Start application</strong>.</li>
+      <li>Fill in your information and attach your copy of grades, letter of intent, and notarized scholarship agreement.</li>
+      <li>Submit. Authorized Staff check your requirements and record the result. No automated grading is done.</li>
+      <li>Follow your status in <strong>My Applications</strong> and watch your <strong>Notifications</strong> for updates.</li>
+    </ol>
+    <div class="notice"><i class="ti ti-info-circle"></i> <span>Eligibility, deadlines, and award rules are confirmed by the CSS Office.</span></div>
+    <button type="button" class="btn btn-primary btn-block" data-close-modal>Got it</button>
+  </div>
+</div>
+
+<script src="js/validation.js"></script>
+<script src="js/data.js"></script>
+<script src="js/common.js"></script>
+<script src="js/catalog.js"></script>
+<script src="js/change-password.js"></script>
+<script src="js/sidebar.js"></script>
+<script src="js/student-dashboard.js"></script>
+</body>
+</html>
