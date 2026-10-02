@@ -91,14 +91,14 @@ const SCHOLARSHIP_REQUIREMENTS = [
 ];
 
 const SCHOLARSHIP_AGREEMENT_TEMPLATES = {
-  "Academic Scholarship": "assets/documents/academic-entrance-exam-scholarship-agreement.pdf",
-  "Entrance Exam Scholarship": "assets/documents/academic-entrance-exam-scholarship-agreement.pdf",
-  "4Ps Scholarship": "assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
-  "Urdanetarian Scholarship": "assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
-  "RPSEA Scholarship": "assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
-  "SOC Scholarship": "assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
-  "BSA Scholarship": "assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
-  "New Program Scholarship": "assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
+  "Academic Scholarship": "../assets/documents/academic-entrance-exam-scholarship-agreement.pdf",
+  "Entrance Exam Scholarship": "../assets/documents/academic-entrance-exam-scholarship-agreement.pdf",
+  "4Ps Scholarship": "../assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
+  "Urdanetarian Scholarship": "../assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
+  "RPSEA Scholarship": "../assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
+  "SOC Scholarship": "../assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
+  "BSA Scholarship": "../assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
+  "New Program Scholarship": "../assets/documents/4ps-urdanetarian-rpsea-soc-bsa-new-program-scholarship-agreement.pdf",
 };
 
 function getScholarshipInfo(key) {
