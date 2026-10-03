@@ -1,16 +1,6 @@
 const STATUSES = ["Submitted", "Under Evaluation", "Approved", "Rejected"];
 
 const TRIMESTERS = ["1st Trimester", "2nd Trimester", "3rd Trimester"];
-const DEFAULT_TERM = { trimester: "1st Trimester", academicYear: "2026\u20132027" };
-
-function makeTermLabel(term) {
-  if (!term || !term.trimester) return "";
-  return `${term.trimester}, AY ${term.academicYear}`;
-}
-
-function currentTermLabel() {
-  return makeTermLabel(loadStore().term);
-}
 
 const SCHOLARSHIP_TYPES = [
   "Academic Scholarship",
@@ -23,448 +13,406 @@ const SCHOLARSHIP_TYPES = [
   "New Program Scholarship",
 ];
 
-const DB_KEY = "sams_db_v3";
-const SESSION_KEY = "sams_session_v2";
-const RESET_KEY = "sams_reset_email";
-const LEGACY_DEMO_EMAILS = [
-  "admin@panpacificu.edu.ph",
-  "staff@panpacificu.edu.ph",
-  "juan.delacruz@panpacificu.edu.ph",
-  "maria.santos@panpacificu.edu.ph",
-];
+const API_BASE = (function () {
+  const configured = window.SAMS_API_BASE;
+  if (configured) return String(configured).replace(/\/+$/, "");
+  const meta = document.querySelector('meta[name="sams-api-base"]');
+  if (meta && meta.content) return meta.content.replace(/\/+$/, "");
+  return "/api";
+})();
 
-function uid(prefix) {
-  return prefix + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const ACCESS_TOKEN_KEY = "sams_access_token";
+const REFRESH_TOKEN_KEY = "sams_refresh_token";
+const RESET_TOKEN_KEY = "sams_reset_token";
+
+const LEGACY_STORAGE_KEYS = ["sams_db_v3", "sams_session_v2", "sams_reset_email"];
+const LEGACY_DATABASE_NAMES = ["sams_files_v2"];
+
+function clearLegacyBrowserData() {
+  LEGACY_STORAGE_KEYS.forEach((key) => {
+    try {
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    } catch (error) {
+      console.error("Could not clear old browser data:", error);
+    }
+  });
+  if (!window.indexedDB || !indexedDB.deleteDatabase) return;
+  LEGACY_DATABASE_NAMES.forEach((name) => {
+    try {
+      indexedDB.deleteDatabase(name);
+    } catch (error) {
+      console.error("Could not clear old browser files:", error);
+    }
+  });
 }
 
-function nowISO() {
-  return new Date().toISOString();
-}
-
-function daysAgoISO(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString();
-}
-
-function appCodeFor(index) {
-  return `APP-${new Date().getFullYear()}-${String(index).padStart(4, "0")}`;
-}
+clearLegacyBrowserData();
 
 function friendlyError(error) {
   const text = error && error.message ? error.message : String(error || "Something went wrong.");
-  if (/quota|exceeded/i.test(text)) {
-    return "The browser storage is full. Remove some data or use smaller files.";
-  }
   return text;
 }
 
-function buildInitialData() {
-  return {
-    term: { ...DEFAULT_TERM },
-    users: [],
-    applications: [],
-    notifications: [],
-    appCounter: 0,
-  };
+function authToken() {
+  return sessionStorage.getItem(ACCESS_TOKEN_KEY) || "";
 }
 
-function loadStore() {
-  let store = null;
+function loggedIn() {
+  return Boolean(authToken() || sessionStorage.getItem(REFRESH_TOKEN_KEY));
+}
+
+function storeSession(payload) {
+  if (payload.access_token) sessionStorage.setItem(ACCESS_TOKEN_KEY, payload.access_token);
+  if (payload.refresh_token) sessionStorage.setItem(REFRESH_TOKEN_KEY, payload.refresh_token);
+}
+
+function clearSession() {
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
+class ApiError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
+async function errorMessage(response) {
+  let detail = "";
   try {
-    store = JSON.parse(localStorage.getItem(DB_KEY));
-  } catch (e) {
-    store = null;
+    const data = await response.json();
+    if (typeof data.detail === "string") detail = data.detail;
+    else if (Array.isArray(data.detail) && data.detail[0] && data.detail[0].msg) detail = data.detail[0].msg;
+    else if (typeof data.message === "string") detail = data.message;
+  } catch (error) {
+    detail = "";
   }
-  if (!store || !Array.isArray(store.users)) {
-    store = buildInitialData();
-    saveStore(store);
-  }
-  let changed = false;
-  const removedUserIds = store.users
-    .filter((u) => LEGACY_DEMO_EMAILS.some((email) => sameEmail(u.email, email)))
-    .map((u) => u.id);
-  if (removedUserIds.length) {
-    const removedAppIds = store.applications
-      .filter((app) => removedUserIds.includes(app.studentUserId))
-      .map((app) => app.id);
-    store.users = store.users.filter((u) => !removedUserIds.includes(u.id));
-    store.applications = store.applications.filter((app) => !removedAppIds.includes(app.id));
-    store.notifications = (store.notifications || []).filter(
-      (n) => !removedUserIds.includes(n.userId) && !removedAppIds.includes(n.appId)
-    );
-    changed = true;
-  }
-  if (!store.term || !store.term.trimester) {
-    store.term = { ...DEFAULT_TERM };
-    changed = true;
-  }
-  const label = makeTermLabel(store.term);
-  store.applications.forEach((app) => {
-    if (!app.term) {
-      app.term = label;
-      changed = true;
-    }
-    if (app.archived === undefined) {
-      app.archived = false;
-      changed = true;
-    }
-    if (app.discountPercent === undefined) {
-      app.discountPercent = "";
-      changed = true;
-    }
-  });
-  if (changed) saveStore(store);
-  return store;
+  if (detail) return detail;
+  if (response.status === 401) return "Please log in again.";
+  if (response.status === 403) return "Your account is not allowed to do this.";
+  if (response.status === 404) return "That record could not be found.";
+  if (response.status >= 500) return "The server had a problem. Please try again.";
+  return "Something went wrong. Please try again.";
 }
 
-function saveStore(store) {
-  localStorage.setItem(DB_KEY, JSON.stringify(store));
+async function rawRequest(path, options) {
+  const settings = options || {};
+  const headers = Object.assign({}, settings.headers);
+  if (authToken()) headers.Authorization = "Bearer " + authToken();
+  let body = settings.body;
+  if (settings.json !== undefined) {
+    headers["Content-Type"] = "application/json";
+    body = JSON.stringify(settings.json);
+  }
+  let response;
+  try {
+    response = await fetch(API_BASE + path, {
+      method: settings.method || "GET",
+      headers: headers,
+      body: body,
+    });
+  } catch (error) {
+    throw new ApiError("Cannot reach the server. Please check your connection and try again.", 0);
+  }
+  return response;
 }
 
-function publicUser(user) {
-  const { password, ...safe } = user;
-  return safe;
+let refreshInFlight = null;
+
+function refreshSession() {
+  if (refreshInFlight) return refreshInFlight;
+  const refreshToken = sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  if (!refreshToken) return Promise.resolve(false);
+  refreshInFlight = fetch(API_BASE + "/auth/refresh", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken: refreshToken }),
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        clearSession();
+        return false;
+      }
+      storeSession(await response.json());
+      return true;
+    })
+    .catch(() => false)
+    .then((result) => {
+      refreshInFlight = null;
+      return result;
+    });
+  return refreshInFlight;
 }
 
-function sameEmail(a, b) {
-  return String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+async function apiRequest(path, options) {
+  const settings = Object.assign({}, options);
+  let response = await rawRequest(path, settings);
+  if (response.status === 401 && !settings.retried) {
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      settings.retried = true;
+      response = await rawRequest(path, settings);
+    }
+  }
+  if (!response.ok) throw new ApiError(await errorMessage(response), response.status);
+  if (settings.raw) return response;
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 }
 
 async function getCurrentUser() {
-  const id = sessionStorage.getItem(SESSION_KEY);
-  if (!id) return null;
-  const user = loadStore().users.find((u) => u.id === id);
-  return user ? publicUser(user) : null;
+  if (!loggedIn()) return null;
+  try {
+    const data = await apiRequest("/auth/me");
+    return data.user;
+  } catch (error) {
+    if (error.status === 401 || error.status === 403) {
+      clearSession();
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function signIn(email, password) {
-  const user = loadStore().users.find((u) => sameEmail(u.email, email));
-  if (!user || user.password !== password) return { error: "Incorrect email or password." };
-  sessionStorage.setItem(SESSION_KEY, user.id);
-  return { user: publicUser(user) };
+  try {
+    const data = await apiRequest("/auth/login", { method: "POST", json: { email, password } });
+    storeSession(data);
+    return { user: data.user };
+  } catch (error) {
+    if (error.status === 400 || error.status === 401) return { error: error.message };
+    throw error;
+  }
 }
 
 async function signOutUser() {
-  sessionStorage.removeItem(SESSION_KEY);
+  try {
+    await apiRequest("/auth/logout", { method: "POST" });
+  } catch (error) {
+    console.error("Sign out could not reach the server:", error.message);
+  }
+  clearSession();
 }
 
 async function signUpStudent(details) {
-  const store = loadStore();
-  if (store.users.some((u) => sameEmail(u.email, details.email))) {
-    return { error: "An account with this email already exists." };
+  try {
+    const data = await apiRequest("/auth/register", {
+      method: "POST",
+      json: {
+        fullName: details.fullName,
+        studentId: details.studentId,
+        email: details.email,
+        program: details.program,
+        yearLevel: details.yearLevel,
+        password: details.password,
+      },
+    });
+    storeSession(data);
+    return { user: data.user };
+  } catch (error) {
+    if (error.status === 400) return { error: error.message };
+    throw error;
   }
-  const user = {
-    id: uid("usr"),
-    role: "student",
-    fullName: details.fullName,
-    email: details.email.trim(),
-    password: details.password,
-    studentId: details.studentId,
-    program: details.program,
-    yearLevel: details.yearLevel,
-    createdAt: nowISO(),
-  };
-  store.users.push(user);
-  saveStore(store);
-  sessionStorage.setItem(SESSION_KEY, user.id);
-  return { user: publicUser(user) };
 }
 
 async function sendPasswordReset(email) {
-  const user = loadStore().users.find((u) => sameEmail(u.email, email));
-  if (!user) return { error: "No account was found with that email." };
-  sessionStorage.setItem(RESET_KEY, user.email);
-  return {};
+  try {
+    const data = await apiRequest("/auth/password-reset/request", { method: "POST", json: { email } });
+    if (data.resetToken) sessionStorage.setItem(RESET_TOKEN_KEY, data.resetToken);
+    return data.emailed ? { emailed: true } : {};
+  } catch (error) {
+    if (error.status === 400) return { error: error.message };
+    throw error;
+  }
 }
 
 async function setNewPassword(newPassword) {
-  const email = sessionStorage.getItem(RESET_KEY);
-  if (!email) return { error: 'Please start from "Forgot password?" on the login page.' };
-  const store = loadStore();
-  const user = store.users.find((u) => sameEmail(u.email, email));
-  if (!user) return { error: "Account not found." };
-  user.password = newPassword;
-  saveStore(store);
-  sessionStorage.removeItem(RESET_KEY);
+  const params = new URLSearchParams(String(window.location.hash || "").replace(/^#/, ""));
+  const token = params.get("access_token") || sessionStorage.getItem(RESET_TOKEN_KEY) || "";
+  if (!token) return { error: 'Please start from "Forgot password?" on the login page.' };
+  try {
+    await apiRequest("/auth/password-reset/confirm", { method: "POST", json: { token, newPassword } });
+  } catch (error) {
+    return { error: error.message };
+  }
+  sessionStorage.removeItem(RESET_TOKEN_KEY);
+  if (window.location.hash) history.replaceState(null, "", window.location.pathname);
   return {};
 }
 
 async function changeOwnPassword(user, currentPassword, newPassword) {
-  const store = loadStore();
-  const record = store.users.find((u) => u.id === user.id);
-  if (!record || record.password !== currentPassword) {
-    return { error: "Current password is incorrect." };
+  try {
+    await apiRequest("/auth/change-password", {
+      method: "POST",
+      json: { currentPassword, newPassword },
+    });
+    return {};
+  } catch (error) {
+    if (error.status === 400) return { error: error.message };
+    throw error;
   }
-  record.password = newPassword;
-  saveStore(store);
-  return {};
 }
 
 async function updateOwnProfile(userId, patch) {
-  const store = loadStore();
-  const record = store.users.find((u) => u.id === userId);
-  if (!record) return;
-  record.program = patch.program;
-  record.yearLevel = patch.yearLevel;
-  saveStore(store);
+  await apiRequest("/users/me", { method: "PATCH", json: patch });
 }
 
 async function allStaffAccounts() {
-  return loadStore()
-    .users.filter((u) => u.role === "staff" || u.role === "admin")
-    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-    .map(publicUser);
+  const data = await apiRequest("/users");
+  return data.users;
 }
 
 async function createStaffAccount(details) {
-  const current = await getCurrentUser();
-  if (!current || current.role !== "admin") {
-    return { error: "Only an Admin can create Staff or Admin accounts." };
+  try {
+    await apiRequest("/users", {
+      method: "POST",
+      json: {
+        role: details.role,
+        fullName: details.fullName,
+        email: details.email,
+        password: details.password,
+      },
+    });
+    return {};
+  } catch (error) {
+    if (error.status === 400 || error.status === 403) return { error: error.message };
+    throw error;
   }
-  const store = loadStore();
-  if (store.users.some((u) => sameEmail(u.email, details.email))) {
-    return { error: "An account with this email already exists." };
+}
+
+let termRequest = null;
+
+function loadTerm() {
+  if (!termRequest) {
+    termRequest = apiRequest("/term").catch((error) => {
+      termRequest = null;
+      throw error;
+    });
   }
-  store.users.push({
-    id: uid("usr"),
-    role: details.role,
-    fullName: details.fullName,
-    email: details.email.trim(),
-    password: details.password,
-    studentId: "",
-    program: "",
-    yearLevel: "",
-    createdAt: nowISO(),
-  });
-  saveStore(store);
-  return {};
+  return termRequest;
 }
 
 async function getCurrentTerm() {
-  const term = loadStore().term;
-  return { trimester: term.trimester, academicYear: term.academicYear, label: makeTermLabel(term) };
+  const data = await loadTerm();
+  return data.term;
+}
+
+async function getCurrentTermLabel() {
+  const term = await getCurrentTerm();
+  return term.label;
 }
 
 async function setCurrentTerm(trimester, academicYear) {
-  const user = await getCurrentUser();
-  if (!user || (user.role !== "staff" && user.role !== "admin")) {
-    return { error: "Only Authorized Staff or Admin can change the term." };
+  try {
+    termRequest = null;
+    const data = await apiRequest("/term", { method: "POST", json: { trimester, academicYear } });
+    return data;
+  } catch (error) {
+    if (error.status === 400 || error.status === 403) return { error: error.message };
+    throw error;
   }
-  if (!TRIMESTERS.includes(trimester)) {
-    return { error: "Please choose the 1st, 2nd or 3rd Trimester." };
-  }
-  const yearCheck = checkAcademicYear(academicYear);
-  if (!yearCheck.valid) return { error: yearCheck.message };
-  const store = loadStore();
-  const previousLabel = makeTermLabel(store.term);
-  const newTerm = { trimester, academicYear: normalizeAcademicYear(academicYear) };
-  const label = makeTermLabel(newTerm);
-  if (label === previousLabel) {
-    return { error: "The system is already on " + label + ". Nothing was changed." };
-  }
-  let archived = 0;
-  store.applications.forEach((app) => {
-    if (!app.archived) {
-      app.term = app.term || previousLabel;
-      app.archived = true;
-      archived++;
-    }
-  });
-  store.term = newTerm;
-  saveStore(store);
-  return { label, previousLabel, archived };
-}
-
-function newestFirst(a, b) {
-  return new Date(b.dateSubmitted) - new Date(a.dateSubmitted);
 }
 
 async function getAllApplications() {
-  return loadStore().applications.slice().sort(newestFirst);
+  const data = await apiRequest("/applications?scope=all");
+  return data.applications;
 }
 
 async function getActiveApplications() {
-  return loadStore()
-    .applications.filter((a) => !a.archived && !a.deleted)
-    .sort(newestFirst);
+  const data = await apiRequest("/applications?scope=active");
+  return data.applications;
 }
 
 async function getApplicationsForStudent(studentUserId) {
-  return loadStore()
-    .applications.filter((a) => a.studentUserId === studentUserId && !a.deleted)
-    .sort(newestFirst);
+  const data = await apiRequest("/applications?scope=mine");
+  return data.applications;
 }
 
 async function getActiveApplicationsForStudent(studentUserId) {
-  return loadStore()
-    .applications.filter((a) => a.studentUserId === studentUserId && !a.archived && !a.deleted)
-    .sort(newestFirst);
+  const data = await apiRequest("/applications?scope=mine-active");
+  return data.applications;
+}
+
+async function getApplicationHistoryRows() {
+  const data = await apiRequest("/applications/history");
+  return data.rows;
 }
 
 async function getApplicationById(id) {
-  return loadStore().applications.find((a) => a.id === id) || null;
+  try {
+    const data = await apiRequest("/applications/" + encodeURIComponent(id));
+    return data.application;
+  } catch (error) {
+    if (error.status === 404) return null;
+    throw error;
+  }
 }
 
-async function createApplication(app) {
-  const store = loadStore();
-  const student = store.users.find((u) => u.id === app.studentUserId);
-  if (!student || student.role !== "student") {
-    throw new Error("Only student accounts can submit applications.");
-  }
-  store.appCounter = (store.appCounter || 0) + 1;
-  const record = {
-    id: app.id || uid("app"),
-    code: appCodeFor(store.appCounter),
-    studentUserId: student.id,
-    studentName: student.fullName,
-    studentId: student.studentId,
-    universityEmail: student.email,
-    program: app.program,
-    yearLevel: app.yearLevel,
-    gwa: app.gwa || "",
-    scholarshipType: app.scholarshipType,
-    status: "Submitted",
-    remarks: "",
-    evaluatedBy: "",
-    discountPercent: "",
-    dateSubmitted: nowISO(),
-    documents: app.documents,
-    term: makeTermLabel(store.term),
-    archived: false,
-    deleted: false,
-    deletedAt: null,
-    history: [{ status: "Submitted", date: nowISO(), by: student.fullName, remarks: "Application submitted." }],
-  };
-  store.applications.push(record);
-  addNotificationTo(
-    store, student.id, record.id, "status",
-    `Your ${record.scholarshipType} application (${record.code}) was submitted successfully.`
+async function createApplication(application, files) {
+  const form = new FormData();
+  form.append(
+    "payload",
+    JSON.stringify({
+      program: application.program,
+      yearLevel: application.yearLevel,
+      scholarshipType: application.scholarshipType,
+      gwa: application.gwa || "",
+    })
   );
-  store.users
-    .filter((u) => u.role === "staff" || u.role === "admin")
-    .forEach((u) => {
-      addNotificationTo(
-        store, u.id, record.id, "admin",
-        `New application ${record.code} was submitted by ${record.studentName}.`
-      );
-    });
-  saveStore(store);
-  return record;
+  SCHOLARSHIP_REQUIREMENTS.forEach((item) => {
+    const file = files ? files[item.key] : null;
+    if (file) form.append(item.key, file, file.name);
+  });
+  const data = await apiRequest("/applications", { method: "POST", body: form });
+  return data.application;
 }
 
 async function updateApplicationStatus(appId, status, remarks, discountPercent) {
-  const staff = await getCurrentUser();
-  if (!staff || (staff.role !== "staff" && staff.role !== "admin")) {
-    throw new Error("Only Authorized Staff or Admin can evaluate applications.");
-  }
-  const store = loadStore();
-  const app = store.applications.find((a) => a.id === appId);
-  if (!app) throw new Error("Application not found.");
-  if (app.archived) {
-    throw new Error(`This application belongs to ${app.term} and can no longer be evaluated. It is kept for records only.`);
-  }
-  const allowed =
-    (app.status === "Submitted" && status === "Under Evaluation") ||
-    (app.status === "Under Evaluation" && (status === "Approved" || status === "Rejected"));
-  if (!allowed) throw new Error(`An application cannot move from ${app.status} to ${status}.`);
-  const note = (remarks || "").trim();
-  if (status === "Rejected" && note === "") throw new Error("Remarks are required to reject an application.");
-  if (status === "Approved") {
-    const discount = String(discountPercent || "").trim();
-    if (discount !== "") {
-      const discountNumber = Number(discount);
-      if (Number.isNaN(discountNumber) || discountNumber < 0 || discountNumber > 100) {
-        throw new Error("Discount percentage must be a number between 0 and 100.");
-      }
-      app.discountPercent = String(discountNumber);
-    }
-  }
-  app.status = status;
-  app.remarks = note;
-  app.evaluatedBy = staff.fullName;
-  app.history.push({ status, date: nowISO(), by: staff.fullName, remarks: note });
-  let message = `Your ${app.scholarshipType} application (${app.code})`;
-  if (status === "Under Evaluation") {
-    message += " moved to Under Evaluation.";
-  } else if (status === "Approved") {
-    message += " was Approved." + (note ? ` Remarks: ${note}` : "") + " Please proceed to the CSS Office for the next steps.";
-  } else {
-    message += ` was Rejected. Reason: ${note} You may visit the CSS Office if you need clarification.`;
-  }
-  addNotificationTo(store, app.studentUserId, app.id, "status", message);
-  saveStore(store);
-  return app;
+  const data = await apiRequest("/applications/" + encodeURIComponent(appId) + "/status", {
+    method: "POST",
+    json: { status: status, remarks: remarks || "", discountPercent: discountPercent || "" },
+  });
+  return data.application;
 }
 
 async function updateApplicationDiscount(appId, discountPercent) {
-  const staff = await getCurrentUser();
-  if (!staff || (staff.role !== "staff" && staff.role !== "admin")) {
-    throw new Error("Only Authorized Staff or Admin can edit the tuition fee discount.");
-  }
-  const store = loadStore();
-  const app = store.applications.find((a) => a.id === appId);
-  if (!app) throw new Error("Application not found.");
-  if (app.status !== "Approved") {
-    throw new Error("Only approved applications have a tuition fee discount to edit.");
-  }
-  const discount = String(discountPercent || "").trim();
-  if (discount !== "") {
-    const discountNumber = Number(discount);
-    if (Number.isNaN(discountNumber) || discountNumber < 0 || discountNumber > 100) {
-      throw new Error("Discount percentage must be a number between 0 and 100.");
-    }
-    app.discountPercent = String(discountNumber);
-  } else {
-    app.discountPercent = "";
-  }
-  saveStore(store);
-  return app;
+  const data = await apiRequest("/applications/" + encodeURIComponent(appId) + "/discount", {
+    method: "PATCH",
+    json: { discountPercent: discountPercent || "" },
+  });
+  return data.application;
 }
 
 async function deleteApplication(appId) {
-  const staff = await getCurrentUser();
-  if (!staff || (staff.role !== "staff" && staff.role !== "admin")) {
-    throw new Error("Only Authorized Staff or Admin can delete applications.");
-  }
-  const store = loadStore();
-  const app = store.applications.find((a) => a.id === appId);
-  if (!app) throw new Error("Application not found.");
-  app.deleted = true;
-  app.deletedAt = nowISO();
-  store.notifications = store.notifications.filter((n) => n.appId !== appId);
-  saveStore(store);
-  return app;
+  const data = await apiRequest("/applications/" + encodeURIComponent(appId), { method: "DELETE" });
+  return data.application;
 }
 
-function addNotificationTo(store, userId, appId, type, message) {
-  store.notifications.push({ id: uid("ntf"), userId, appId, type, message, date: nowISO(), read: false });
+async function fetchDocumentBlob(appId, requirementKey) {
+  const response = await apiRequest(
+    "/applications/" + encodeURIComponent(appId) + "/documents/" + encodeURIComponent(requirementKey),
+    { raw: true }
+  );
+  return response.blob();
 }
 
 async function getNotificationsForUser(userId) {
-  return loadStore()
-    .notifications.filter((n) => n.userId === userId)
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 100);
+  const data = await apiRequest("/notifications");
+  return data.notifications;
 }
 
 async function unreadNotificationCount(userId) {
-  return loadStore().notifications.filter((n) => n.userId === userId && !n.read).length;
+  const data = await apiRequest("/notifications/unread-count");
+  return data.count;
 }
 
 async function markNotificationRead(id) {
-  const store = loadStore();
-  const note = store.notifications.find((n) => n.id === id);
-  if (note) {
-    note.read = true;
-    saveStore(store);
-  }
+  await apiRequest("/notifications/" + encodeURIComponent(id) + "/read", { method: "POST" });
 }
 
 async function markAllNotificationsRead(userId) {
-  const store = loadStore();
-  store.notifications.forEach((n) => {
-    if (n.userId === userId) n.read = true;
-  });
-  saveStore(store);
+  await apiRequest("/notifications/read-all", { method: "POST" });
 }
