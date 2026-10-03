@@ -45,6 +45,13 @@ python scripts/promote_admin.py --list
 python scripts/promote_admin.py you@panpacificu.edu.ph
 ```
 
+## Deploying
+
+`render.yaml` deploys the whole site (pages + API) as one Render web service.
+See [RENDER.md](RENDER.md) for the two routes: a fast demo deploy with the
+bundled SQLite database, or Supabase Auth + Postgres + Storage so the data
+survives restarts.
+
 ## Moving to Supabase
 
 Supabase owns the Postgres database and the Storage bucket for uploaded

@@ -75,6 +75,12 @@ accounts it created.
 Keep `SUPABASE_SERVICE_KEY` on the server. It bypasses RLS, which is fine here
 because nothing else can reach the database.
 
+## Deploying
+
+`render.yaml` at the repository root deploys this API (and the pages it serves)
+to Render in one step. [../RENDER.md](../RENDER.md) walks through both the quick
+SQLite demo deploy and the Supabase-backed setup.
+
 ## First administrator
 
 There is deliberately no built-in admin account.
@@ -114,7 +120,9 @@ There is deliberately no built-in admin account.
 | `PASSWORD_RESET_REDIRECT` | empty | Where the Supabase recovery e-mail should return to |
 | `UNIVERSITY_EMAIL_DOMAIN` | `@panpacificu.edu.ph` | Registration and password reset only accept this domain |
 | `CORS_ORIGINS` | localhost origins | Comma separated list, only needed when the frontend is hosted separately |
-| `SERVE_FRONTEND` / `FRONTEND_DIR` | `true` / `..` | Serve the pages from this API |
+| `SERVE_FRONTEND` / `FRONTEND_DIR` | `true` / `..` | Serve the pages from this API. Only `index.html`, `template/`, `css/`, `js/` and `assets/` are published |
+| `PUBLIC_BASE_URL` | empty | Public address of the API. On Render the onrender.com hostname is detected automatically |
+| `SEED_DEMO_ACCOUNTS` | `false` | Creates the demo accounts and applications when the database is still empty. Development and demos only |
 
 ## Hosting the frontend elsewhere
 

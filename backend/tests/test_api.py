@@ -388,6 +388,7 @@ def test_password_flows(client):
     assert client.post("/api/auth/password-reset/request", json={"email": "nobody@panpacificu.edu.ph"}).status_code == 400
 
     requested = client.post("/api/auth/password-reset/request", json={"email": STUDENT_EMAIL})
+    assert requested.status_code == 200
     reset_token = requested.json()["resetToken"]
     assert reset_token
 

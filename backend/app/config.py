@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -23,6 +24,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./var/dev.db"
 
     university_email_domain: str = "@panpacificu.edu.ph"
+    public_base_url: str = ""
+    seed_demo_accounts: bool = False
 
     supabase_url: str = ""
     supabase_anon_key: str = ""
@@ -55,7 +58,20 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
+        origins = [item.strip() for item in self.cors_origins.split(",") if item.strip()]
+        if "*" in origins:
+            return ["*"]
+        return origins
+
+    @property
+    def site_url(self) -> str:
+        """Public address of the API, used for links that leave the app."""
+        if self.public_base_url:
+            return self.public_base_url.rstrip("/")
+        render_host = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+        if render_host:
+            return f"https://{render_host}"
+        return self.frontend_url.rstrip("/")
 
     @property
     def supabase_root(self) -> str:
@@ -93,6 +109,9 @@ class Settings(BaseSettings):
 
     @property
     def resolved_frontend_dir(self) -> Path:
+        render_root = os.environ.get("RENDER_PROJECT_DIR", "").strip()
+        if render_root and Path(render_root).is_dir():
+            return Path(render_root).resolve()
         path = Path(self.frontend_dir)
         if not path.is_absolute():
             path = BACKEND_DIR / self.frontend_dir

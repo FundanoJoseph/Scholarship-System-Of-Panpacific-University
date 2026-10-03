@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Iterator
 from datetime import datetime, timezone
 
@@ -6,6 +7,8 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from .config import settings
+
+logger = logging.getLogger("sams")
 
 
 class Base(DeclarativeBase):
@@ -69,7 +72,8 @@ def get_db() -> Iterator[Session]:
 
 
 def prepare_database() -> None:
-    from . import models  # noqa: F401
+    import app.models  # noqa: F401
+
 
     if settings.is_sqlite:
         settings.resolved_upload_dir.mkdir(parents=True, exist_ok=True)
@@ -77,11 +81,17 @@ def prepare_database() -> None:
         return
 
     tables = set(inspect(engine).get_table_names(schema="public"))
-    if "users" not in tables:
+    if "users" in tables:
+        return
+
+    if settings.supabase_url:
         raise RuntimeError(
-            "The database is empty. Run supabase/schema.sql on it first "
-            "(Supabase dashboard -> SQL editor), then start the API again."
+            "This Supabase project has no tables yet. Run supabase/schema.sql in the "
+            "Supabase SQL editor, then start the API again."
         )
+
+    Base.metadata.create_all(engine)
+    logger.info("Created the database schema automatically (no existing tables were found).")
 
 
 def ping() -> bool:

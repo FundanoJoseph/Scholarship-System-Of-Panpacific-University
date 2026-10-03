@@ -193,9 +193,15 @@ def request_password_reset(db: Session, email: str) -> dict:
         raise bad_request("No account was found with that email.")
 
     if settings.uses_supabase_auth:
-        redirect = settings.password_reset_redirect or ""
+        redirect = settings.password_reset_redirect or f"{settings.site_url}/template/reset-password.html"
         SupabaseAuth().send_recovery_email(user.email, redirect)
         return {"emailed": True}
+
+    if not settings.is_development:
+        raise bad_request(
+            "Password reset by e-mail is not switched on for this deployment yet. "
+            "Please ask the CSS Office to reset your password."
+        )
 
     raw_token = secrets.token_urlsafe(32)
     db.add(
@@ -207,10 +213,7 @@ def request_password_reset(db: Session, email: str) -> dict:
     )
     db.commit()
 
-    payload: dict = {"emailed": False}
-    if settings.is_development:
-        payload["resetToken"] = raw_token
-    return payload
+    return {"emailed": False, "resetToken": raw_token}
 
 
 def confirm_password_reset(db: Session, token: str, new_password: str) -> None:
