@@ -140,7 +140,6 @@ class SupabaseAuth:
         self._request("POST", "/recover", json_body={"email": email, "redirect_to": redirect_to})
 
     def fetch_user(self, access_token: str) -> dict[str, Any] | None:
-        key = settings.supabase_anon_key or settings.supabase_service_key
         response = self._request(
             "GET",
             "/user",
