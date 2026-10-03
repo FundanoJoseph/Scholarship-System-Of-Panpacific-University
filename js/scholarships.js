@@ -143,25 +143,14 @@ async function handleApplicationSubmit(e) {
   button.disabled = true;
   button.innerHTML = '<i class="ti ti-loader-2"></i> Uploading...';
   try {
-    const applicationId = newId();
-    const documents = {};
-    for (const item of SCHOLARSHIP_REQUIREMENTS) {
-      const file = chosenFileObjects[item.key];
-      const path = storagePathFor(currentUser.id, applicationId, item.key, file.name);
-      await uploadStoredFile(path, file);
-      documents[item.key] = { name: file.name, path, uploadedAt: chosenFiles[item.key].uploadedAt };
-    }
-    const application = await createApplication({
-      id: applicationId,
-      studentUserId: currentUser.id,
-      studentName: currentUser.fullName,
-      studentId: currentUser.studentId,
-      universityEmail: currentUser.email,
-      program,
-      yearLevel,
-      scholarshipType: selectedScholarship.key,
-      documents,
-    });
+    const application = await createApplication(
+      {
+        program,
+        yearLevel,
+        scholarshipType: selectedScholarship.key,
+      },
+      chosenFileObjects
+    );
     await updateOwnProfile(currentUser.id, { program, yearLevel });
     setFlash(`Application ${application.code} submitted successfully! Your earlier applications were kept.`);
     window.location.href = "my-applications.html";

@@ -54,6 +54,11 @@ async function handleForgot(e) {
     const result = await sendPasswordReset(email);
     if (result.error) {
       showAlert("forgotAlert", result.error);
+    } else if (result.emailed) {
+      showAlert(
+        "forgotAlert",
+        "We sent a password reset link to " + email + ". Open the link in your inbox to choose a new password."
+      );
     } else {
       window.location.href = "reset-password.html";
       return;

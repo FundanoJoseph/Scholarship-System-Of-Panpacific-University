@@ -29,8 +29,9 @@ async function showOverview() {
   const applications = await getActiveApplicationsForStudent(currentUser.id);
   const pastCount = (await getApplicationsForStudent(currentUser.id)).length - applications.length;
   const latest = applications[0];
+  const termLabel = await getCurrentTermLabel();
   el("welcomeName").textContent = currentUser.fullName.split(" ")[0];
-  el("termText").textContent = currentTermLabel();
+  el("termText").textContent = termLabel;
   el("statPrograms").textContent = twoDigits(SCHOLARSHIP_CATALOG.length);
   el("statApplications").textContent = twoDigits(applications.length);
   if (latest) {
@@ -52,7 +53,7 @@ async function showOverview() {
   ).join("");
 }
 
-function applicationCardHtml(app) {
+function applicationCardHtml(app, termLabel) {
   const decided = app.status === "Approved" || app.status === "Rejected";
   const rejected = app.status === "Rejected";
   const evaluationStep = decided ? "done" : "current";
@@ -71,7 +72,7 @@ function applicationCardHtml(app) {
         <div>
           <span class="micro">${app.code}</span>
           <h3>${app.scholarshipType}</h3>
-          <p>${escapeHtml(app.term || currentTermLabel())}</p>
+          <p>${escapeHtml(app.term || termLabel || "")}</p>
         </div>
       </div>
 

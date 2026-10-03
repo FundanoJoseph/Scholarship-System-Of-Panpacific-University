@@ -77,26 +77,7 @@ function rowActionsHtml(appId) {
 
 async function reloadData() {
   allApps = await getActiveApplications();
-  const rows = [];
-  const applications = await getAllApplications();
-  applications.forEach((app) => {
-    for (let i = 1; i < app.history.length; i++) {
-      rows.push({
-        code: app.code,
-        term: app.term || "",
-        archived: !!app.archived,
-        studentName: app.studentName,
-        studentId: app.studentId,
-        scholarshipType: app.scholarshipType,
-        previousStatus: app.history[i - 1].status,
-        newStatus: app.history[i].status,
-        date: app.history[i].date,
-        remarks: app.history[i].remarks,
-      });
-    }
-  });
-  rows.sort((a, b) => new Date(b.date) - new Date(a.date));
-  allRows = rows;
+  allRows = await getApplicationHistoryRows();
 }
 
 function showHistory() {
@@ -306,7 +287,6 @@ function askToDelete(appId) {
 
 async function confirmDelete() {
   const removed = await deleteApplication(pendingDeleteId);
-  await deleteApplicationFiles(removed);
   allApps = allApps.filter((app) => app.id !== removed.id);
   pendingDeleteId = null;
   closeModal("deleteModal");
