@@ -168,9 +168,19 @@ Then add that origin to `CORS_ORIGINS` on the server.
 
 ```sh
 cd backend
-pip install -r requirements-dev.txt
-pytest
+pip install -r requirements.txt -r requirements-dev.txt
+python -m pytest -q                          # API rules on a throw-away SQLite database
+python scripts/verify_supabase_mode.py       # sign-in + storage through Supabase Auth/Storage
 ```
 
-The suite runs against a throw-away SQLite database and local file storage, so it
-never touches your development or Supabase data.
+`pytest` runs against a throw-away SQLite database and local file storage, so it
+never touches your development or Supabase data (13 tests).
+
+`verify_supabase_mode.py` starts `scripts/mock_supabase.py`, a stand-in that
+speaks the same Auth and Storage endpoints as Supabase, boots the API with
+`AUTH_PROVIDER=supabase` and `STORAGE_BACKEND=supabase`, and walks through
+registration, login, tokens, roles, document upload and download, password
+changes, recovery e-mail hand-off and the audit trail. It covers both signing
+styles: `rs256` with JWKS (new Supabase projects) and `hs256` with the legacy
+shared secret. GitHub Actions runs both on every push
+(`.github/workflows/tests.yml`).

@@ -81,6 +81,29 @@ Do this before a real demo so accounts, applications and documents survive.
 3. Log in again. The Admin / Staff side appears, and further staff or admin
    accounts can be created from **Account Management** inside the app.
 
+### Where each Supabase value lives
+
+| Value | Where to find it |
+| --- | --- |
+| `SUPABASE_URL` | Project Settings -> Data API -> Project URL (`https://<ref>.supabase.co`) |
+| `SUPABASE_ANON_KEY` | Project Settings -> API Keys -> publishable / anon key |
+| `SUPABASE_SERVICE_KEY` | Project Settings -> API Keys -> secret / service_role key (server only) |
+| `DATABASE_URL` | Project Settings -> Database -> Connection string -> **Session pooler**, then replace `[YOUR-PASSWORD]` and add `?sslmode=require` |
+| `PASSWORD_RESET_REDIRECT` | your own Render URL, `https://<service>.onrender.com/template/reset-password.html` |
+
+Two settings in Supabase that make the demo smoother:
+
+- **Authentication -> Sign In / Providers -> Email**: keep the provider enabled.
+  This API creates accounts already confirmed (`email_confirm`), so students can
+  log in straight after registering.
+- **Authentication -> URL Configuration**: set the Site URL to your Render URL
+  and add the `.../template/reset-password.html` redirect, otherwise the recovery
+  e-mail link comes back to the wrong place. Supabase's built-in e-mail service is
+  rate limited on free projects, which only affects the "Forgot password?" flow.
+
+The `scholarship-documents` bucket and all tables are created by
+`supabase/schema.sql`; nothing else has to be set up by hand.
+
 ## 3. Handy Render commands
 
 From the service **Shell** (the working directory is `backend/`):
