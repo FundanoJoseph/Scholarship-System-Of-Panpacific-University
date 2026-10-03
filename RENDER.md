@@ -4,6 +4,39 @@
 the pages and the API, so a deploy gives you a working site at
 `https://<service-name>.onrender.com`.
 
+## Checklist
+
+Do these in order. Steps 1-4 give you a working demo URL; steps 5-10 move the
+data to Supabase so nothing is lost on a restart.
+
+- [ ] 1. Render: sign in with GitHub at <https://dashboard.render.com>.
+- [ ] 2. Render: **New -> Blueprint**, pick this repository and the branch with the
+      changes (`arena/01a0ff6a-scholarship-system-of-panpacif`, or `main` after the
+      pull request is merged), then **Apply**. Nothing else to fill in.
+- [ ] 3. Wait for the build, then open the service URL and log in as
+      `admin@panpacificu.edu.ph` / `Panpacific#2026`. The demo data is created on
+      the first start.
+- [ ] 4. Try it end to end: register a student, submit an application with three
+      documents, evaluate it as the staff account, then check My Applications.
+- [ ] 5. Supabase: create a project (free plan is fine), then **SQL Editor -> New
+      query**, paste all of `supabase/schema.sql` and **Run**.
+- [ ] 6. Supabase: copy `SUPABASE_URL`, the publishable/anon key, the
+      secret/service_role key and the **Session pooler** connection string.
+- [ ] 7. Render: service -> **Environment**, add `AUTH_PROVIDER=supabase`,
+      `STORAGE_BACKEND=supabase`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+      `SUPABASE_SERVICE_KEY`, `DATABASE_URL`, `PASSWORD_RESET_REDIRECT`, and set
+      `SEED_DEMO_ACCOUNTS=false`. Save.
+- [ ] 8. Supabase: **Authentication -> URL Configuration**, set the Site URL to the
+      Render URL and add the `.../template/reset-password.html` redirect.
+- [ ] 9. Register your own account in the app, then promote it: Render
+      **Shell** -> `python scripts/promote_admin.py you@panpacificu.edu.ph`
+      (or run the one-line `UPDATE` in the Supabase SQL editor).
+- [ ] 10. Log in again as the admin and create the real staff accounts from
+      **Account Management**.
+
+Before a real deployment, also change the demo passwords and set
+`SEED_DEMO_ACCOUNTS=false`.
+
 ## 1. Fast demo deploy (bundled SQLite database)
 
 1. Push this branch to GitHub (already done if you are reading this from the repo).
